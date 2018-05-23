@@ -621,7 +621,7 @@ namespace lmdb {
   static inline void dbi_set_relfunc(MDB_txn* txn, MDB_dbi dbi, MDB_rel_func* rel);
   static inline void dbi_set_relctx(MDB_txn* txn, MDB_dbi dbi, void* ctx);
   static inline bool dbi_get(MDB_txn* txn, MDB_dbi dbi, const MDB_val* key, MDB_val* data);
-  static inline bool dbi_put(MDB_txn* txn, MDB_dbi dbi, const MDB_val* key, MDB_val* data, unsigned int flags);
+  static inline bool dbi_put(MDB_txn* txn, MDB_dbi dbi, const MDB_val* key, const MDB_val* data, unsigned int flags);
   static inline bool dbi_del(MDB_txn* txn, MDB_dbi dbi, const MDB_val* key, const MDB_val* data);
   // TODO: mdb_cmp()
   // TODO: mdb_dcmp()
@@ -774,9 +774,9 @@ static inline bool
 lmdb::dbi_put(MDB_txn* const txn,
               const MDB_dbi dbi,
               const MDB_val* const key,
-              MDB_val* const data,
+              const MDB_val* const data,
               const unsigned int flags = 0) {
-  const int rc = ::mdb_put(txn, dbi, const_cast<MDB_val*>(key), data, flags);
+  const int rc = ::mdb_put(txn, dbi, const_cast<MDB_val*>(key), const_cast<MDB_val*>(data), flags);
   if (rc != MDB_SUCCESS && rc != MDB_KEYEXIST) {
     error::raise("mdb_put", rc);
   }
@@ -1595,7 +1595,7 @@ public:
    */
   bool put(MDB_txn* const txn,
            const val& key,
-           val& data,
+           const val& data,
            const unsigned int flags = default_put_flags) {
     return lmdb::dbi_put(txn, handle(), key, data, flags);
   }
@@ -1884,7 +1884,7 @@ public:
   bool get(std::string& key,
            std::string& val,
            const MDB_cursor_op op) {
-    lmdb::val k{}, v{};
+    lmdb::val k{key}, v{};
     const bool found = get(k, v, op);
     if (found) {
       key.assign(k.data(), k.size());
